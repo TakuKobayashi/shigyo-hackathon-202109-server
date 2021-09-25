@@ -1,4 +1,7 @@
-import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
+
+import 'source-map-support/register';
+
+import { APIGatewayProxyHandler } from 'aws-lambda';
 import serverlessExpress from '@vendia/serverless-express';
 import express, {Request, Response} from "express"
 
@@ -12,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors({ origin: true }));
 
-app.get('/', async (req: Request, res: Response) => {
+app.get('/test', async (req: Request, res: Response) => {
   res.json({hello: 'world'})
 });
 

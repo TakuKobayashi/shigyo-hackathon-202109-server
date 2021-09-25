@@ -5,21 +5,16 @@ const serverlessConfiguration: AWS = {
   service: 'shigyo-hackathon-202109-server',
   frameworkVersion: '2',
   custom: {
-    esbuild: {
-      bundle: true,
-      minify: false,
-      sourcemap: true,
-      exclude: ['aws-sdk'],
-      target: 'node14',
-      define: { 'require.resolve': undefined },
-      platform: 'node',
+    webpack: {
+      webpackConfig: './webpack.config.js',
+      includeModules: true,
     },
     dotenv: {
       path: './.env',
       include: Object.keys(dotenvConfig.parsed),
     },
   },
-  plugins: ['serverless-esbuild', 'serverless-dotenv-plugin', 'serverless-offline'],
+  plugins: ['serverless-webpack', 'serverless-dotenv-plugin', 'serverless-offline'],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
