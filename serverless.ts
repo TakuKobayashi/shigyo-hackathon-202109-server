@@ -1,5 +1,5 @@
 import type { AWS } from '@serverless/typescript';
-const dotenvConfig = require('dotenv').config();
+const dotenvConfig = require('dotenv').config() || {};
 
 const serverlessConfiguration: AWS = {
   service: 'shigyo-hackathon-202109-server',
