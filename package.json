@@ -30,7 +30,6 @@
     "redoc-cli": "^0.12.3",
     "serverless": "^2.60.0",
     "serverless-dotenv-plugin": "^3.9.0",
-    "serverless-esbuild": "^1.17.1",
     "serverless-offline": "^8.2.0",
     "serverless-webpack": "^5.5.4",
     "swagger": "^0.7.5",
