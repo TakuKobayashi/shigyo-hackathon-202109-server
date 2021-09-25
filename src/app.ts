@@ -1,9 +1,8 @@
-
 import 'source-map-support/register';
 
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import serverlessExpress from '@vendia/serverless-express';
-import express, {Request, Response} from "express"
+import express, { Request, Response } from 'express';
 
 const app = express();
 const cors = require('cors');
@@ -16,7 +15,7 @@ app.use(bodyParser.json());
 app.use(cors({ origin: true }));
 
 app.get('/test', async (req: Request, res: Response) => {
-  res.json({hello: 'world'})
+  res.json({ hello: 'world' });
 });
 
-export const handler: APIGatewayProxyHandler = serverlessExpress({app});
+export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
