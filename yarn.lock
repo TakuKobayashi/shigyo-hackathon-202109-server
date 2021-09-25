@@ -947,13 +947,10 @@
   resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-4.0.1.tgz#8f80dd965ad81f3e1bc26d6f5c727e132721ff40"
   integrity sha512-Y0K95ThC3esLEYD6ZuqNek29lNX2EM1qxV8y2FTLUB0ff5wWrk7az+mLrnNFUnaXcgKye22+sFBRXOgpPILZNg==
 
-"@vendia/serverless-express@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@vendia/serverless-express/-/serverless-express-3.4.0.tgz#156f47d364b067ae6fa678a914c51887f494321a"
-  integrity sha512-/UAAbi9qRjUtjRISt5MJ1sfhtrHb26hqQ0nvE5qhMLsAdR5H7ErBwPD8Q/v2OENKm0iWsGwErIZEg7ebUeFDjQ==
-  dependencies:
-    binary-case "^1.0.0"
-    type-is "^1.6.16"
+"@vendia/serverless-express@^4.3.11":
+  version "4.3.11"
+  resolved "https://registry.yarnpkg.com/@vendia/serverless-express/-/serverless-express-4.3.11.tgz#e99fe3d19acf30492d23ba455fdf554210e8407b"
+  integrity sha512-rM2lJLIqdeckb/ghE7C7QX7YCH7N+iph5TjLs3Umc/sUey8S2ARiAUPi/WeFZLa1JlVaADiBdpMYbwyNe+5gHg==
 
 URIjs@^1.16.0:
   version "1.16.1"
@@ -1284,15 +1281,6 @@ aws-sdk@^2.834.0, aws-sdk@^2.994.0:
     uuid "3.3.2"
     xml2js "0.4.19"
 
-aws-serverless-express@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/aws-serverless-express/-/aws-serverless-express-3.4.0.tgz#74153b8cc80dbd2c6a32a51e6d353a325c2710d7"
-  integrity sha512-YG9ZjAOI9OpwqDDWzkRc3kKJYJuR7gTMjLa3kAWopO17myoprxskCUyCEee+RKe34tcR4UNrVtgAwW5yDe74bw==
-  dependencies:
-    "@vendia/serverless-express" "^3.4.0"
-    binary-case "^1.0.0"
-    type-is "^1.6.16"
-
 aws-sign2@~0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/aws-sign2/-/aws-sign2-0.7.0.tgz#b46e890934a9591f2d2f6f86d7e6a9f1b3fe76a8"
@@ -1375,11 +1363,6 @@ bestzip@^2.2.0:
     glob "^7.1.6"
     which "^2.0.2"
     yargs "^16.2.0"
-
-binary-case@^1.0.0:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/binary-case/-/binary-case-1.1.4.tgz#d687104d59e38f2b9e658d3a58936963c59ab931"
-  integrity sha512-9Kq8m6NZTAgy05Ryuh7U3Qc4/ujLQU1AZ5vMw4cr3igTdi5itZC6kCNrRr2X8NzPiDn2oUIFTfa71DKMnue/Zg==
 
 binary-extensions@^1.0.0:
   version "1.13.1"

@@ -1,6 +1,5 @@
 import type { AWS } from '@serverless/typescript';
-
-import hello from '@functions/hello';
+const dotenvConfig = require("dotenv").config()
 
 const serverlessConfiguration: AWS = {
   service: 'shigyo-hackathon-202109-server',
@@ -14,6 +13,10 @@ const serverlessConfiguration: AWS = {
       target: 'node14',
       define: { 'require.resolve': undefined },
       platform: 'node',
+    },
+    dotenv: {
+      path: './.env',
+      include: Object.keys(dotenvConfig.parsed),
     },
   },
   plugins: ['serverless-esbuild', 'serverless-dotenv-plugin', 'serverless-offline'],
@@ -32,7 +35,27 @@ const serverlessConfiguration: AWS = {
     lambdaHashingVersion: '20201221',
   },
   // import the function via paths
-  functions: { hello },
+  functions: {
+    app: {
+      handler: 'src/app.handler',
+      memorySize: 128,
+      timeout: 900,
+      events: [
+        {
+          http: {
+            method: 'ANY',
+            path: '/',
+          },
+        },
+        {
+          http: {
+            method: 'ANY',
+            path: '/{proxy+}',
+          },
+        },
+      ],
+    },
+  },
 };
 
 module.exports = serverlessConfiguration;
