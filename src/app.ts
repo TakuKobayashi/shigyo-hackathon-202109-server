@@ -18,4 +18,8 @@ app.get('/test', async (req: Request, res: Response) => {
   res.json({ hello: 'world' });
 });
 
+app.get('/sample', async (req: Request, res: Response) => {
+  res.json({ hello: 'worldworld' });
+});
+
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
