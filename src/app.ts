@@ -49,7 +49,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     // address: placeResult.vicinity
     // phone_number: placeDetailResponse.data.formatted_phone_number
     const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
-    for (const photo of placeResult.photos) {
+    for (const photo of placeDetailResponse.photos) {
       photoResponsePromises.push(
         axios.get('https://maps.googleapis.com/maps/api/place/photo', {
           params: {
@@ -83,7 +83,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
       },
     });
   }
-  res.json(hotSpotResults);
+  res.json({spots: hotSpotResults});
 });
 
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
