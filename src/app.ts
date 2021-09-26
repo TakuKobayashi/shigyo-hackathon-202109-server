@@ -49,7 +49,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
       params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
     });
-    const placeDetail = placeDetailResponse.data
+    const placeDetail = placeDetailResponse.data;
     // address: placeDetailResponse.data.result.formatted_address
     // address: placeResult.vicinity
     // phone_number: placeDetailResponse.data.result.formatted_phone_number
@@ -65,6 +65,11 @@ app.get('/hotspots', async (req: Request, res: Response) => {
           },
         }),
       );
+    }
+    const reviews = placeDetail.result.reviews || [];
+    let comment = 'すごくキレイな場所でした';
+    if (reviews.length > 0) {
+      comment = reviews[Math.floor(Math.random() * reviews.length)].text;
     }
     const photoResponses = await Promise.all(photoResponsePromises);
     const photoUrls = photoResponses.map((photoResponse) => String(photoResponse.request.res.responseUrl));
@@ -83,12 +88,12 @@ app.get('/hotspots', async (req: Request, res: Response) => {
           } as ImageMetum;
         }),
         average_review_score: placeResult.rating,
-        comment: '映え散らかしております',
+        comment: comment,
         weather_infos: {},
       },
     });
   }
-  res.json({spots: hotSpotResults});
+  res.json({ spots: hotSpotResults, weather_infos: weathernewsresponse.data });
 });
 
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
