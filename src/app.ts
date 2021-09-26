@@ -4,6 +4,7 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import serverlessExpress from '@vendia/serverless-express';
 import express, { Request, Response } from 'express';
 import axios from 'axios';
+import { setupFireStore } from './common/firebase';
 import { HotSpots } from './interfaces/hotspots'
 
 const app = express();
@@ -21,6 +22,8 @@ app.get('/test', async (req: Request, res: Response) => {
 });
 
 app.get('/sample', async (req: Request, res: Response) => {
+  const firestore = setupFireStore();
+  const result = await firestore.collection("tests").doc("hogeId").set({})
   const response = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
     params: { lat: 35.65, lon: 140.04 },
     headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },

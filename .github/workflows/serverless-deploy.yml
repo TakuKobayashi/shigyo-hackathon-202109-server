@@ -24,6 +24,11 @@ jobs:
         WEATHER_NEWS_API_KEY: ${{ secrets.WEATHER_NEWS_API_KEY }}
       run: |
         echo "WEATHER_NEWS_API_KEY=${WEATHER_NEWS_API_KEY}" >> ./.env
+    - name: Register firebaseConfig.json
+      env:
+        FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
+      run: |
+        echo "${FIREBASE_CONFIG}" >> ./firebaseConfig.json
     - name: yarn install
       run: yarn install
     - name: serverless package and deploy

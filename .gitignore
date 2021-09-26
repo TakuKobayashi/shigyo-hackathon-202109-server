@@ -19,3 +19,4 @@ dist/
 .dynamodb/
 .idea
 .esbuild/
+firebaseConfig.json
