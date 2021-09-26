@@ -3,9 +3,9 @@ import 'source-map-support/register';
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import serverlessExpress from '@vendia/serverless-express';
 import express, { Request, Response } from 'express';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { setupFireStore } from './common/firebase';
-import { HotSpots } from './interfaces/hotspots'
+import { HotSpots, Place, ImageMetum } from './interfaces/hotspots';
 
 const app = express();
 const cors = require('cors');
@@ -23,7 +23,7 @@ app.get('/test', async (req: Request, res: Response) => {
 
 app.get('/sample', async (req: Request, res: Response) => {
   const firestore = setupFireStore();
-  const result = await firestore.collection("tests").doc("hogeId").set({})
+  const result = await firestore.collection('tests').doc('hogeId').set({});
   const response = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
     params: { lat: 35.65, lon: 140.04 },
     headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
@@ -32,29 +32,54 @@ app.get('/sample', async (req: Request, res: Response) => {
 });
 
 app.get('/hotspots', async (req: Request, res: Response) => {
-  const result: HotSpots = {
-    spots: [{
-      place_id: "tekitou",
-      place_name: "熱海後楽園ホテル",
-      latitude: 35.0886871,
-      longitude: 139.0791992,
-      address: "静岡県熱海市和田浜南町１０−１",
+  const placeResponse = await axios.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', {
+    params: { key: process.env.GOOGLE_API_KEY, location: [35.0886871, 139.0791992].join(','), radius: 50000, language: 'ja' },
+  });
+  const placeResults = placeResponse.data.results;
+  const hotSpotResults: Place[] = [];
+  for (const placeResult of placeResults) {
+    //const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+    //  params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
+    //});
+    //console.log(placeDetailResponse.data);
+    // address: placeDetailResponse.data.formatted_address
+    // phone_number: placeDetailResponse.data.formatted_phone_number
+    const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
+    for (const photo of placeResult.photos) {
+      photoResponsePromises.push(
+        axios.get('https://maps.googleapis.com/maps/api/place/photo', {
+          params: {
+            key: process.env.GOOGLE_API_KEY,
+            photo_reference: photo.photo_reference,
+            maxheight: photo.height,
+            maxwidth: photo.width,
+          },
+        }),
+      );
+    }
+    const photoResponses = await Promise.all(photoResponsePromises);
+    const photoUrls = photoResponses.map((photoResponse) => String(photoResponse.request.res.responseUrl));
+    hotSpotResults.push({
+      place_id: placeResult.place_id,
+      place_name: placeResult.name,
+      latitude: placeResult.geometry.location.lat,
+      longitude: placeResult.geometry.location.lng,
+      address: placeResult.vicinity,
       extra_infomation: {
-        hot_images: [
-          {
-            url: "https://atamibayresort.com/cms/storage/banner/1/3v07dz6g.jpg",
-            created_at: '2021-09-26T02:05:42.299Z',
-          }
-        ],
-        website_url: "https://www.atamikorakuen.co.jp/",
-        average_review_score: 4.1,
-        comment: "映え散らかしております",
+        hot_images: photoUrls.map((photoUrl) => {
+          const date = new Date();
+          return {
+            url: photoUrl,
+            created_at: date.toISOString(),
+          } as ImageMetum;
+        }),
+        average_review_score: placeResult.rating,
+        comment: '映え散らかしております',
         weather_infos: {},
-      }
-    }]
+      },
+    });
   }
-
-  res.json(result);
+  res.json(hotSpotResults);
 });
 
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
