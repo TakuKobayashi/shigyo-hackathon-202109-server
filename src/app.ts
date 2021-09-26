@@ -7,6 +7,7 @@ import axios, { AxiosResponse } from 'axios';
 import { setupFireStore } from './common/firebase';
 import { HotSpots, Place, ImageMetum } from './interfaces/hotspots';
 
+const geohash = require('ngeohash');
 const app = express();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -53,6 +54,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     );
   }
   const placeDetailResponses = await Promise.all(placeDetailResponsePromises);
+  const placeIdInfos: { [s: string]: any } = {};
   const hotSpotResults: Place[] = [];
   for (const placeResult of placeResults) {
     const placeDetailResponse = placeDetailResponses.find((placeDetailRes) => placeResult.place_id === placeDetailRes.data.result.place_id);
@@ -80,7 +82,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     }
     const photoResponses = await Promise.all(photoResponsePromises);
     const photoUrls = photoResponses.map((photoResponse) => String(photoResponse.request.res.responseUrl));
-    hotSpotResults.push({
+    const resultPlace: Place = {
       place_id: placeResult.place_id,
       place_name: placeResult.name,
       latitude: placeResult.geometry.location.lat,
@@ -98,8 +100,27 @@ app.get('/hotspots', async (req: Request, res: Response) => {
         comment: comment,
         weather_infos: {},
       },
-    });
+    };
+    hotSpotResults.push(resultPlace);
+    placeIdInfos[placeResult.place_id] = {
+      place_name: placeResult.name,
+      latitude: placeResult.geometry.location.lat,
+      longitude: placeResult.geometry.location.lng,
+      address: placeDetail.result.formatted_address,
+      review_score: placeResult.rating || 0,
+      imageMeta: resultPlace.extra_infomation.hot_images,
+      reviews: reviews,
+    };
   }
+  const locationGeohash = geohash.encode(lat, lng);
+  const wideLocationGeohash = locationGeohash.substring(0, 6);
+  const firestore = setupFireStore();
+  await firestore.collection('area_location').doc(wideLocationGeohash).set({hitPlaceIds: Object.keys(placeIdInfos)});
+  const savePlacePromises: Promise<FirebaseFirestore.WriteResult>[] = [];
+  for (const placeId of Object.keys(placeIdInfos)) {
+    savePlacePromises.push(firestore.collection('place_info').doc(placeId).set(placeIdInfos[placeId]));
+  }
+  await Promise.all(savePlacePromises);
   res.json({ spots: hotSpotResults, weather_infos: weathernewsresponse.data });
 });
 
