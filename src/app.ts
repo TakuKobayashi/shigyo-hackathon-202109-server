@@ -36,6 +36,10 @@ app.get('/sample', async (req: Request, res: Response) => {
 app.get('/hotspots', async (req: Request, res: Response) => {
   const lat = req.query.lat || 35.0886871;
   const lng = req.query.lng || 139.0791992;
+  const weathernewsresponse = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
+    params: { lat: lat, lon: lng },
+    headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
+  });
   const placeResponse = await axios.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', {
     params: { key: process.env.GOOGLE_API_KEY, location: [lat, lng].join(','), radius: 50000, language: 'ja' },
   });
@@ -45,11 +49,12 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
       params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
     });
-    // address: placeDetailResponse.data.formatted_address
+    const placeDetail = placeDetailResponse.data
+    // address: placeDetailResponse.data.result.formatted_address
     // address: placeResult.vicinity
-    // phone_number: placeDetailResponse.data.formatted_phone_number
+    // phone_number: placeDetailResponse.data.result.formatted_phone_number
     const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
-    for (const photo of placeDetailResponse.photos) {
+    for (const photo of placeDetail.result.photos) {
       photoResponsePromises.push(
         axios.get('https://maps.googleapis.com/maps/api/place/photo', {
           params: {
@@ -68,7 +73,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
       place_name: placeResult.name,
       latitude: placeResult.geometry.location.lat,
       longitude: placeResult.geometry.location.lng,
-      address: placeDetailResponse.data.formatted_address,
+      address: placeDetail.result.formatted_address,
       extra_infomation: {
         hot_images: photoUrls.map((photoUrl) => {
           const date = new Date();
