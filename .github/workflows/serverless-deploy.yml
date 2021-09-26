@@ -19,6 +19,11 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Register .env
+      env:
+        WEATHER_NEWS_API_KEY: ${{ secrets.WEATHER_NEWS_API_KEY }}
+      run: |
+        echo "WEATHER_NEWS_API_KEY=${WEATHER_NEWS_API_KEY}" >> ./.env
     - name: yarn install
       run: yarn install
     - name: serverless package and deploy
