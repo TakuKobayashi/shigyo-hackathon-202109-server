@@ -44,11 +44,18 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     params: { key: process.env.GOOGLE_API_KEY, location: [lat, lng].join(','), radius: 50000, language: 'ja' },
   });
   const placeResults = placeResponse.data.results;
+  const placeDetailResponsePromises: Promise<AxiosResponse<any>>[] = [];
+  for (const placeResult of placeResults) {
+    placeDetailResponsePromises.push(
+      axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+        params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
+      }),
+    );
+  }
+  const placeDetailResponses = await Promise.all(placeDetailResponsePromises);
   const hotSpotResults: Place[] = [];
   for (const placeResult of placeResults) {
-    const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
-      params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
-    });
+    const placeDetailResponse = placeDetailResponses.find((placeDetailRes) => placeResult.place_id === placeDetailRes.data.result.place_id);
     const placeDetail = placeDetailResponse.data;
     // address: placeDetailResponse.data.result.formatted_address
     // address: placeResult.vicinity
