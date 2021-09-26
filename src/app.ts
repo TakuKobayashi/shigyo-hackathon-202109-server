@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import serverlessExpress from '@vendia/serverless-express';
 import express, { Request, Response } from 'express';
+import axios from 'axios';
 
 const app = express();
 const cors = require('cors');
@@ -19,7 +20,11 @@ app.get('/test', async (req: Request, res: Response) => {
 });
 
 app.get('/sample', async (req: Request, res: Response) => {
-  res.json({ hello: 'worldworld' });
+  const response = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
+    params: { lat: 35.65, lon: 140.04 },
+    headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
+  });
+  res.json(response.data);
 });
 
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
