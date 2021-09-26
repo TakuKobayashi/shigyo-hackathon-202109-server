@@ -22,27 +22,31 @@ app.get('/test', async (req: Request, res: Response) => {
 });
 
 app.get('/sample', async (req: Request, res: Response) => {
+  const lat = req.query.lat || 35.65;
+  const lng = req.query.lng || 140.04;
   const firestore = setupFireStore();
   const result = await firestore.collection('tests').doc('hogeId').set({});
   const response = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
-    params: { lat: 35.65, lon: 140.04 },
+    params: { lat: lat, lon: lng },
     headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
   });
   res.json(response.data);
 });
 
 app.get('/hotspots', async (req: Request, res: Response) => {
+  const lat = req.query.lat || 35.0886871;
+  const lng = req.query.lng || 139.0791992;
   const placeResponse = await axios.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', {
-    params: { key: process.env.GOOGLE_API_KEY, location: [35.0886871, 139.0791992].join(','), radius: 50000, language: 'ja' },
+    params: { key: process.env.GOOGLE_API_KEY, location: [lat, lng].join(','), radius: 50000, language: 'ja' },
   });
   const placeResults = placeResponse.data.results;
   const hotSpotResults: Place[] = [];
   for (const placeResult of placeResults) {
-    //const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
-    //  params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
-    //});
-    //console.log(placeDetailResponse.data);
+    const placeDetailResponse = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+      params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
+    });
     // address: placeDetailResponse.data.formatted_address
+    // address: placeResult.vicinity
     // phone_number: placeDetailResponse.data.formatted_phone_number
     const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
     for (const photo of placeResult.photos) {
@@ -64,7 +68,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
       place_name: placeResult.name,
       latitude: placeResult.geometry.location.lat,
       longitude: placeResult.geometry.location.lng,
-      address: placeResult.vicinity,
+      address: placeDetailResponse.data.formatted_address,
       extra_infomation: {
         hot_images: photoUrls.map((photoUrl) => {
           const date = new Date();
