@@ -33,7 +33,7 @@ const serverlessConfiguration: AWS = {
   functions: {
     app: {
       handler: 'src/app.handler',
-      memorySize: 128,
+      memorySize: 256,
       timeout: 900,
       events: [
         {
