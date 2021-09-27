@@ -23,24 +23,18 @@ app.get('/test', async (req: Request, res: Response) => {
 });
 
 app.get('/sample', async (req: Request, res: Response) => {
-  const lat = req.query.lat || 35.65;
-  const lng = req.query.lng || 140.04;
+  const lat: number = parseFloat(req.query.lat || 35.65);
+  const lng: number = parseFloat(req.query.lng || 140.04);
   const firestore = setupFireStore();
   const result = await firestore.collection('tests').doc('hogeId').set({});
-  const response = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
-    params: { lat: lat, lon: lng },
-    headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
-  });
+  const response = await requestWeatherNewsApi(lat, lng);
   res.json(response.data);
 });
 
 app.get('/hotspots', async (req: Request, res: Response) => {
-  const lat = req.query.lat || 35.0886871;
-  const lng = req.query.lng || 139.0791992;
-  const weathernewsresponse = await axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
-    params: { lat: lat, lon: lng },
-    headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
-  });
+  const lat: number = parseFloat(req.query.lat || 35.0886871);
+  const lng: number = parseFloat(req.query.lng || 139.0791992);
+  const weathernewsresponse = await requestWeatherNewsApi(lat, lng);
   const hotSpotResults: Place[] = [];
   const locationGeohash = geohash.encode(lat, lng);
   const wideLocationGeohash = locationGeohash.substring(0, 6);
@@ -81,15 +75,7 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     params: { key: process.env.GOOGLE_API_KEY, location: [lat, lng].join(','), radius: 50000, language: 'ja' },
   });
   const placeResults = placeResponse.data.results;
-  const placeDetailResponsePromises: Promise<AxiosResponse<any>>[] = [];
-  for (const placeResult of placeResults) {
-    placeDetailResponsePromises.push(
-      axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
-        params: { key: process.env.GOOGLE_API_KEY, place_id: placeResult.place_id, language: 'ja' },
-      }),
-    );
-  }
-  const placeDetailResponses = await Promise.all(placeDetailResponsePromises);
+  const placeDetailResponses = await requestPlaceDetails(placeResults.map((placeResult) => placeResult.place_id));
   const placeIdInfos: { [s: string]: any } = {};
   for (const placeResult of placeResults) {
     const placeDetailResponse = placeDetailResponses.find((placeDetailRes) => placeResult.place_id === placeDetailRes.data.result.place_id);
@@ -97,22 +83,15 @@ app.get('/hotspots', async (req: Request, res: Response) => {
     // address: placeDetailResponse.data.result.formatted_address
     // address: placeResult.vicinity
     // phone_number: placeDetailResponse.data.result.formatted_phone_number
-    const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
-    for (const photo of placeDetail.result.photos) {
-      photoResponsePromises.push(
-        axios.get('https://maps.googleapis.com/maps/api/place/photo', {
-          params: {
-            key: process.env.GOOGLE_API_KEY,
-            photo_reference: photo.photo_reference,
-            maxheight: photo.height,
-            maxwidth: photo.width,
-          },
-        }),
-      );
+    const photos = (placeDetail.result.photos || []).concat(placeResult.photos || []);
+    const photoResponses = await requestPhotes(photos).catch((error) => {
+      console.log(error.response.request.res.responseUrl);
+    });
+    if (!photoResponses) {
+      continue;
     }
     const reviews = placeDetail.result.reviews || [];
     const comment = getReviewComment(reviews);
-    const photoResponses = await Promise.all(photoResponsePromises);
     const nowDate = new Date();
     const photoUrls = photoResponses.map((photoResponse) => String(photoResponse.request.res.responseUrl));
     const resultPlace: Place = {
@@ -163,6 +142,42 @@ function getReviewComment(reviews: { [s: string]: any }[]): string {
     comment = reviews[Math.floor(Math.random() * reviews.length)].text;
   }
   return comment;
+}
+
+function requestWeatherNewsApi(lat: number, lng: number): Promise<AxiosResponse<any>> {
+  return axios.get('https://wxtech.weathernews.com/api/v1/ss1wx', {
+    params: { lat: lat, lon: lng },
+    headers: { 'X-API-KEY': process.env.WEATHER_NEWS_API_KEY },
+  });
+}
+
+function requestPlaceDetails(placeIds: string[]): Promise<AxiosResponse<any>[]> {
+  const placeDetailResponsePromises: Promise<AxiosResponse<any>>[] = [];
+  for (const placeId of placeIds) {
+    placeDetailResponsePromises.push(
+      axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+        params: { key: process.env.GOOGLE_API_KEY, place_id: placeId, language: 'ja' },
+      }),
+    );
+  }
+  return Promise.all(placeDetailResponsePromises);
+}
+
+function requestPhotes(photos: any[]): Promise<AxiosResponse<any>[]> {
+  const photoResponsePromises: Promise<AxiosResponse<any>>[] = [];
+  for (const photo of photos) {
+    photoResponsePromises.push(
+      axios.get('https://maps.googleapis.com/maps/api/place/photo', {
+        params: {
+          key: process.env.GOOGLE_API_KEY,
+          photo_reference: photo.photo_reference,
+          maxheight: photo.height,
+          maxwidth: photo.width,
+        },
+      }),
+    );
+  }
+  return Promise.all(photoResponsePromises);
 }
 
 export const handler: APIGatewayProxyHandler = serverlessExpress({ app });
